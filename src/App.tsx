@@ -1,19 +1,787 @@
-import Hero from './components/Hero';
-import Countdown from './components/Countdown';
-import EventDetails from './components/EventDetails';
-import Gallery from './components/Gallery';
-import RSVP from './components/RSVP';
-import Footer from './components/Footer';
+import { useState, useEffect, useRef } from "react";
+
+// ── Botanical SVG accents ──────────────────────────────────────────────────
+
+function LeafSprig({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M60 70 Q40 50 20 40 Q40 35 60 70Z" fill="#9ea595" opacity="0.35" />
+      <path d="M60 70 Q80 50 100 40 Q80 35 60 70Z" fill="#9ea595" opacity="0.35" />
+      <path d="M60 70 Q45 42 35 20 Q55 30 60 70Z" fill="#9ea595" opacity="0.25" />
+      <path d="M60 70 Q75 42 85 20 Q65 30 60 70Z" fill="#9ea595" opacity="0.25" />
+      <line x1="60" y1="70" x2="60" y2="15" stroke="#9ea595" strokeWidth="1.2" opacity="0.5" />
+    </svg>
+  );
+}
+
+function CornerLeaves({ position }: { position: "tl" | "tr" | "bl" | "br" }) {
+  const transforms: Record<string, string> = {
+    tl: "rotate(135deg)",
+    tr: "rotate(225deg) scaleX(-1)",
+    bl: "rotate(45deg)",
+    br: "rotate(-45deg) scaleX(-1)",
+  };
+  const corners: Record<string, string> = {
+    tl: "top-0 left-0",
+    tr: "top-0 right-0",
+    bl: "bottom-0 left-0",
+    br: "bottom-0 right-0",
+  };
+  return (
+    <svg
+      className={`absolute ${corners[position]} w-36 h-36 pointer-events-none select-none`}
+      style={{ transform: transforms[position], opacity: 0.18 }}
+      viewBox="0 0 150 150"
+      fill="none"
+    >
+      <path d="M10 140 Q30 80 90 50 Q60 100 10 140Z" fill="#9ea595" />
+      <path d="M10 140 Q70 90 120 30 Q80 90 10 140Z" fill="#9ea595" opacity="0.7" />
+      <path d="M10 140 Q50 100 80 20 Q55 80 10 140Z" fill="#7a8c72" opacity="0.5" />
+      <path d="M10 140 Q20 100 10 50" stroke="#9ea595" strokeWidth="1.5" opacity="0.7" />
+      <path d="M10 140 Q40 110 100 80" stroke="#9ea595" strokeWidth="1" opacity="0.5" />
+    </svg>
+  );
+}
+
+// ── Countdown timer ────────────────────────────────────────────────────────
+
+function useCountdown(target: Date) {
+  const calc = () => {
+    const diff = target.getTime() - Date.now();
+    if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    return {
+      days: Math.floor(diff / 86400000),
+      hours: Math.floor((diff % 86400000) / 3600000),
+      minutes: Math.floor((diff % 3600000) / 60000),
+      seconds: Math.floor((diff % 60000) / 1000),
+    };
+  };
+  const [time, setTime] = useState(calc);
+  useEffect(() => {
+    const id = setInterval(() => setTime(calc()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return time;
+}
+
+function CountdownUnit({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <span
+        style={{ fontFamily: "var(--font-serif)", color: "#6b5b4e", fontSize: "2.5rem", lineHeight: 1 }}
+        className="font-semibold"
+      >
+        {String(value).padStart(2, "0")}
+      </span>
+      <span style={{ fontFamily: "var(--font-sans)", color: "#9ea595", fontSize: "0.65rem", letterSpacing: "0.18em" }} className="uppercase">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ── October 2026 Mini Calendar ─────────────────────────────────────────────
+
+const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const OCT_2026_START = 4; // Thursday = index 4
+const OCT_DAYS = 31;
+const HIGHLIGHTED = 27;
+
+function MiniCalendar() {
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < OCT_2026_START; i++) cells.push(null);
+  for (let d = 1; d <= OCT_DAYS; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  return (
+    <div style={{ background: "rgba(255,255,255,0.6)", borderRadius: "1rem", border: "1px solid #c8d4c0" }} className="p-5 w-full max-w-xs mx-auto">
+      <p style={{ fontFamily: "var(--font-sans)", color: "#9ea595", fontSize: "0.65rem", letterSpacing: "0.2em" }} className="uppercase text-center mb-3">
+        October 2026
+      </p>
+      <div className="grid grid-cols-7 gap-y-1">
+        {DAYS.map((d) => (
+          <div key={d} style={{ fontFamily: "var(--font-sans)", color: "#a08c7e", fontSize: "0.65rem", letterSpacing: "0.1em" }} className="text-center uppercase py-1">
+            {d}
+          </div>
+        ))}
+        {cells.map((day, i) => {
+          const isHighlight = day === HIGHLIGHTED;
+          return (
+            <div
+              key={i}
+              style={{
+                fontFamily: "var(--font-sans)",
+                fontSize: "0.8rem",
+                borderRadius: "50%",
+                width: "2rem",
+                height: "2rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto",
+                background: isHighlight ? "#9ea595" : "transparent",
+                color: isHighlight ? "#fefcf8" : day ? "#6b5b4e" : "transparent",
+                fontWeight: isHighlight ? 600 : 400,
+              }}
+            >
+              {day ?? ""}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Add to Calendar ────────────────────────────────────────────────────────
+
+function AddToCalendar() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const googleUrl =
+    "https://www.google.com/calendar/render?action=TEMPLATE&text=Kim+%26+Rhiscel+Wedding&dates=20261027T003000Z/20261027T060000Z&details=Wedding+Ceremony+%26+Reception&location=St.+Francis+of+Assisi+Parish+Church,+La+Verna+Hills,+Davao+City";
+
+  const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:20261027T003000Z\nDTEND:20261027T060000Z\nSUMMARY:Kim & Rhiscel Wedding\nDESCRIPTION:Wedding Ceremony & Reception\nLOCATION:St. Francis of Assisi Parish Church, La Verna Hills, Davao City\nEND:VEVENT\nEND:VCALENDAR`;
+
+  const downloadIcs = () => {
+    const blob = new Blob([icsContent], { type: "text/calendar" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "kim-rhiscel-wedding.ics";
+    a.click();
+    URL.revokeObjectURL(url);
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative inline-block" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          fontFamily: "var(--font-sans)",
+          fontSize: "0.75rem",
+          letterSpacing: "0.18em",
+          color: "#9ea595",
+          border: "1.5px solid #9ea595",
+          borderRadius: "2rem",
+          padding: "0.6rem 1.6rem",
+          background: "transparent",
+          cursor: "pointer",
+          transition: "all 0.2s",
+        }}
+        onMouseEnter={(e) => {
+          (e.target as HTMLButtonElement).style.background = "#9ea595";
+          (e.target as HTMLButtonElement).style.color = "#fefcf8";
+        }}
+        onMouseLeave={(e) => {
+          (e.target as HTMLButtonElement).style.background = "transparent";
+          (e.target as HTMLButtonElement).style.color = "#9ea595";
+        }}
+      >
+        ADD TO CALENDAR
+      </button>
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 8px)",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#fefcf8",
+            border: "1px solid #c8d4c0",
+            borderRadius: "0.75rem",
+            boxShadow: "0 8px 24px rgba(107,91,78,0.12)",
+            zIndex: 50,
+            minWidth: "200px",
+            overflow: "hidden",
+          }}
+        >
+          <a
+            href={googleUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            style={{ fontFamily: "var(--font-sans)", fontSize: "0.8rem", color: "#6b5b4e", display: "block", padding: "0.85rem 1.25rem", textDecoration: "none" }}
+            onMouseEnter={(e) => ((e.target as HTMLElement).style.background = "#f0ede7")}
+            onMouseLeave={(e) => ((e.target as HTMLElement).style.background = "transparent")}
+          >
+            📅 Google Calendar
+          </a>
+          <div style={{ height: "1px", background: "#e8e0d8" }} />
+          <button
+            onClick={downloadIcs}
+            style={{ fontFamily: "var(--font-sans)", fontSize: "0.8rem", color: "#6b5b4e", display: "block", padding: "0.85rem 1.25rem", background: "transparent", border: "none", cursor: "pointer", width: "100%", textAlign: "left" }}
+            onMouseEnter={(e) => ((e.target as HTMLElement).style.background = "#f0ede7")}
+            onMouseLeave={(e) => ((e.target as HTMLElement).style.background = "transparent")}
+          >
+            🍎 Apple Calendar (.ics)
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── OS-aware map URL ──────────────────────────────────────────────────────
+
+function getMapUrl(googleUrl: string, appleUrl: string): string {
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as unknown as Record<string, unknown>).MSStream;
+  return isIOS ? appleUrl : googleUrl;
+}
+
+// ── Map Pin Icon ───────────────────────────────────────────────────────────
+
+function MapPin() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  );
+}
+
+// ── Venue Card ─────────────────────────────────────────────────────────────
+
+function VenueCard({
+  title,
+  time,
+  venue,
+  address,
+  googleMapUrl,
+  appleMapUrl,
+}: {
+  title: string;
+  time: string;
+  venue: string;
+  address: string;
+  googleMapUrl: string;
+  appleMapUrl: string;
+}) {
+  const mapUrl = getMapUrl(googleMapUrl, appleMapUrl);
+  return (
+    <div
+      style={{
+        background: "rgba(255,255,255,0.55)",
+        border: "1px solid #c8d4c0",
+        borderRadius: "1.25rem",
+        padding: "1.75rem",
+        backdropFilter: "blur(4px)",
+        boxShadow: "0 4px 20px rgba(107,91,78,0.06)",
+      }}
+    >
+      <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.6rem", letterSpacing: "0.2em", color: "#9ea595" }} className="uppercase mb-2">
+        {title}
+      </p>
+      <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", color: "#6b5b4e" }} className="mb-3">
+        {time}
+      </p>
+      <p style={{ fontFamily: "var(--font-serif)", fontSize: "1rem", color: "#6b5b4e", fontStyle: "italic" }} className="mb-1">
+        {venue}
+      </p>
+      <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.78rem", color: "#a08c7e", lineHeight: 1.5 }} className="mb-4">
+        {address}
+      </p>
+      <a
+        href={mapUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          fontFamily: "var(--font-sans)",
+          fontSize: "0.7rem",
+          letterSpacing: "0.15em",
+          color: "#9ea595",
+          border: "1.5px solid #9ea595",
+          borderRadius: "2rem",
+          padding: "0.5rem 1.2rem",
+          textDecoration: "none",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.35rem",
+          transition: "all 0.2s",
+        }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget;
+          el.style.background = "#9ea595";
+          el.style.color = "#fefcf8";
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget;
+          el.style.background = "transparent";
+          el.style.color = "#9ea595";
+        }}
+      >
+        <MapPin /> VIEW ON MAP
+      </a>
+    </div>
+  );
+}
+
+// ── Music Button ───────────────────────────────────────────────────────────
+
+function MusicButton() {
+  const [playing, setPlaying] = useState(false);
+  return (
+    <button
+      onClick={() => setPlaying((v) => !v)}
+      title={playing ? "Pause music" : "Play music"}
+      style={{
+        position: "fixed",
+        bottom: "1.5rem",
+        right: "1.5rem",
+        zIndex: 100,
+        width: "3.25rem",
+        height: "3.25rem",
+        borderRadius: "50%",
+        background: "#9ea595",
+        border: "none",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: "0 4px 16px rgba(107,91,78,0.25)",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        color: "#fefcf8",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.08)";
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 20px rgba(107,91,78,0.3)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(107,91,78,0.25)";
+      }}
+    >
+      {playing ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="6" y="4" width="4" height="16" rx="1" />
+          <rect x="14" y="4" width="4" height="16" rx="1" />
+        </svg>
+      ) : (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="5,3 19,12 5,21" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+// ── Section heading ────────────────────────────────────────────────────────
+
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-3 mb-10">
+      <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.65rem", letterSpacing: "0.28em", color: "#9ea595" }} className="uppercase">
+        {children}
+      </p>
+      <div style={{ width: "3rem", height: "1px", background: "#9ea595", opacity: 0.5 }} />
+    </div>
+  );
+}
+
+// ── Divider ────────────────────────────────────────────────────────────────
+
+function Divider() {
+  return <div style={{ width: "100%", height: "1px", background: "linear-gradient(to right, transparent, #9ea595 30%, #9ea595 70%, transparent)", opacity: 0.3, margin: "0 auto" }} />;
+}
+
+// ── Guestbook ─────────────────────────────────────────────────────────────
+
+function Guestbook() {
+  const [name, setName] = useState("");
+  const [wish, setWish] = useState("");
+  const [wishes, setWishes] = useState<{ name: string; wish: string }[]>([]);
+
+  const submit = () => {
+    if (!name.trim() || !wish.trim()) return;
+    setWishes((prev) => [{ name: name.trim(), wish: wish.trim() }, ...prev]);
+    setName("");
+    setWish("");
+  };
+
+  return (
+    <div
+      style={{
+        background: "rgba(255,255,255,0.55)",
+        border: "1px solid #c8d4c0",
+        borderRadius: "1.5rem",
+        boxShadow: "0 8px 32px rgba(107,91,78,0.08)",
+        padding: "2rem",
+        maxWidth: "36rem",
+        width: "100%",
+        margin: "0 auto",
+      }}
+    >
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Enter your name"
+        style={{
+          fontFamily: "var(--font-sans)",
+          fontSize: "0.875rem",
+          color: "#6b5b4e",
+          background: "rgba(254,252,248,0.8)",
+          border: "1px solid #c8d4c0",
+          borderRadius: "0.75rem",
+          padding: "0.75rem 1rem",
+          width: "100%",
+          outline: "none",
+          marginBottom: "0.85rem",
+        }}
+      />
+      <textarea
+        value={wish}
+        onChange={(e) => setWish(e.target.value)}
+        placeholder="Enter your wishes*"
+        rows={4}
+        style={{
+          fontFamily: "var(--font-sans)",
+          fontSize: "0.875rem",
+          color: "#6b5b4e",
+          background: "rgba(254,252,248,0.8)",
+          border: "1px solid #c8d4c0",
+          borderRadius: "0.75rem",
+          padding: "0.75rem 1rem",
+          width: "100%",
+          outline: "none",
+          resize: "none",
+          marginBottom: "1rem",
+        }}
+      />
+      <button
+        onClick={submit}
+        style={{
+          fontFamily: "var(--font-sans)",
+          fontSize: "0.7rem",
+          letterSpacing: "0.18em",
+          color: "#fefcf8",
+          background: "#9ea595",
+          border: "none",
+          borderRadius: "2rem",
+          padding: "0.75rem 2rem",
+          cursor: "pointer",
+          width: "100%",
+          transition: "background 0.2s",
+        }}
+        onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#7a8c72")}
+        onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#9ea595")}
+      >
+        SEND WISHES
+      </button>
+
+      <div className="mt-5">
+        {wishes.length === 0 ? (
+          <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.78rem", color: "#a08c7e", textAlign: "center" }}>
+            No wishes yet. Be the first!
+          </p>
+        ) : (
+          wishes.map((w, i) => (
+            <div key={i} style={{ borderTop: i > 0 ? "1px solid #e8e0d8" : "none", paddingTop: i > 0 ? "0.85rem" : "0", marginTop: i > 0 ? "0.85rem" : "0" }}>
+              <p style={{ fontFamily: "var(--font-serif)", fontSize: "0.85rem", color: "#6b5b4e", fontStyle: "italic" }}>&ldquo;{w.wish}&rdquo;</p>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", color: "#9ea595", marginTop: "0.3rem" }}>— {w.name}</p>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Main App ───────────────────────────────────────────────────────────────
 
 export default function App() {
+  const weddingDate = new Date("2026-10-27T08:30:00+08:00");
+  const countdown = useCountdown(weddingDate);
+
+  const photos = [
+    {
+      url: "https://images.unsplash.com/photo-1759054710707-e1b297817ad9?w=600&h=800&fit=crop&auto=format",
+      alt: "Bride and groom embracing in doorway",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1786335266922-de10f22f10a8?w=600&h=700&fit=crop&auto=format",
+      alt: "Couple embracing under chandelier in garden",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1778143366796-bad738f96f5b?w=600&h=900&fit=crop&auto=format",
+      alt: "Couple embracing romantically outdoors",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1765292784329-7dd08ad946f2?w=600&h=750&fit=crop&auto=format",
+      alt: "Couple in formal attire holding hands outdoors",
+    },
+  ];
+
+  const dressCodes = [
+    { name: "Sage Green", hex: "#9ea595" },
+    { name: "Dusty Blue", hex: "#b0c1c8" },
+    { name: "Champagne", hex: "#f7e7a9" },
+    { name: "Dusty Rose", hex: "#e6bdb9" },
+    { name: "Blush", hex: "#ead5d4" },
+  ];
+
   return (
-    <div className="min-h-full w-full">
-      <Hero />
-      <Countdown />
-      <EventDetails />
-      <Gallery />
-      <RSVP />
-      <Footer />
+    <div style={{ background: "#fefcf8", minHeight: "100vh", overflowX: "hidden" }}>
+      <MusicButton />
+
+      {/* ── HERO ──────────────────────────────────────────────────────── */}
+      <section style={{ position: "relative", minHeight: "100svh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "6rem 1.5rem 4rem", overflow: "hidden" }}>
+        <CornerLeaves position="tl" />
+        <CornerLeaves position="tr" />
+        <CornerLeaves position="bl" />
+        <CornerLeaves position="br" />
+
+        <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.6rem", letterSpacing: "0.35em", color: "#9ea595", marginBottom: "2.5rem" }} className="uppercase">
+          The Wedding of
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.25rem", textAlign: "center" }}>
+          <h1
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "clamp(3rem, 12vw, 7rem)",
+              fontWeight: 400,
+              color: "#6b5b4e",
+              lineHeight: 1.05,
+              margin: 0,
+            }}
+          >
+            Kim Rapliza
+          </h1>
+          <span
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "clamp(2.5rem, 10vw, 5.5rem)",
+              fontWeight: 400,
+              color: "#9ea595",
+              fontStyle: "italic",
+              lineHeight: 1,
+            }}
+          >
+            &amp;
+          </span>
+          <h1
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "clamp(3rem, 12vw, 7rem)",
+              fontWeight: 400,
+              color: "#6b5b4e",
+              lineHeight: 1.05,
+              margin: 0,
+            }}
+          >
+            Rhiscel Cereligia
+          </h1>
+        </div>
+
+        <div style={{ width: "3rem", height: "1px", background: "#9ea595", opacity: 0.5, margin: "2.5rem auto 1.5rem" }} />
+        <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", letterSpacing: "0.22em", color: "#a08c7e" }} className="uppercase">
+          October 27, 2026 · Davao City, Philippines
+        </p>
+      </section>
+
+      <Divider />
+
+      {/* ── FAMILY ANNOUNCEMENT ───────────────────────────────────────── */}
+      <section style={{ padding: "5rem 1.5rem", maxWidth: "52rem", margin: "0 auto", textAlign: "center" }}>
+        <SectionHeading>We joyfully announce the wedding of our children</SectionHeading>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "1.5rem", alignItems: "center" }}>
+          {/* Groom */}
+          <div style={{ textAlign: "center" }}>
+            <p style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(1.1rem, 4vw, 1.5rem)", fontWeight: 500, color: "#6b5b4e" }}>Kim Rapliza</p>
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.6rem", letterSpacing: "0.2em", color: "#9ea595", margin: "0.35rem 0 1rem" }} className="uppercase">Groom</p>
+            <div style={{ height: "1px", background: "#e8ddd5", margin: "0 auto 0.85rem", width: "2.5rem" }} />
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.8rem", color: "#a08c7e", lineHeight: 1.6 }}>
+              Son of<br />
+              <span style={{ color: "#6b5b4e" }}>Gerry Rapliza</span><br />
+              <span style={{ color: "#9ea595" }}>&amp;</span>{" "}
+              <span style={{ color: "#6b5b4e" }}>Rosalina Rapliza</span>
+            </p>
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", color: "#b5a598", marginTop: "0.65rem", fontStyle: "italic" }}>Davao City, Philippines</p>
+          </div>
+
+          {/* Divider */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
+            <div style={{ width: "1px", height: "4rem", background: "#c8d4c0", opacity: 0.6 }} />
+            <span style={{ fontFamily: "var(--font-serif)", fontSize: "1.75rem", color: "#9ea595", fontStyle: "italic" }}>&amp;</span>
+            <div style={{ width: "1px", height: "4rem", background: "#c8d4c0", opacity: 0.6 }} />
+          </div>
+
+          {/* Bride */}
+          <div style={{ textAlign: "center" }}>
+            <p style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(1.1rem, 4vw, 1.5rem)", fontWeight: 500, color: "#6b5b4e" }}>Rhiscel Cereligia</p>
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.6rem", letterSpacing: "0.2em", color: "#9ea595", margin: "0.35rem 0 1rem" }} className="uppercase">Bride</p>
+            <div style={{ height: "1px", background: "#e8ddd5", margin: "0 auto 0.85rem", width: "2.5rem" }} />
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.8rem", color: "#a08c7e", lineHeight: 1.6 }}>
+              Daughter of<br />
+              <span style={{ color: "#6b5b4e" }}>Alfredo Cereligia</span><br />
+              <span style={{ color: "#9ea595" }}>&amp;</span>{" "}
+              <span style={{ color: "#6b5b4e" }}>Jessica Cereligia</span>
+            </p>
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", color: "#b5a598", marginTop: "0.65rem", fontStyle: "italic" }}>Davao City, Philippines</p>
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ── PHOTO GALLERY ─────────────────────────────────────────────── */}
+      <section style={{ padding: "5rem 1.5rem", maxWidth: "60rem", margin: "0 auto" }}>
+        <SectionHeading>Photo Gallery</SectionHeading>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gridTemplateRows: "auto auto",
+            gap: "1rem",
+          }}
+        >
+          {/* Large left */}
+          <div style={{ gridRow: "1 / 3", borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "3/4" }}>
+            <img src={photos[0].url} alt={photos[0].alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" />
+          </div>
+          {/* Top right */}
+          <div style={{ borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "4/3" }}>
+            <img src={photos[1].url} alt={photos[1].alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" />
+          </div>
+          {/* Bottom right — two columns split */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <div style={{ borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "1" }}>
+              <img src={photos[2].url} alt={photos[2].alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" />
+            </div>
+            <div style={{ borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "1" }}>
+              <img src={photos[3].url} alt={photos[3].alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ── DATE, COUNTDOWN & CALENDAR ────────────────────────────────── */}
+      <section style={{ padding: "5rem 1.5rem", maxWidth: "42rem", margin: "0 auto", textAlign: "center" }}>
+        <SectionHeading>Event Info</SectionHeading>
+
+        <div style={{ marginBottom: "2.5rem" }}>
+          <p style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(1.75rem, 6vw, 3rem)", fontWeight: 400, color: "#6b5b4e", letterSpacing: "0.05em" }}>
+            Tuesday · 27 · October 2026
+          </p>
+        </div>
+
+        <MiniCalendar />
+
+        <div style={{ margin: "2rem auto" }}>
+          <AddToCalendar />
+        </div>
+
+        {/* Countdown */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: "0",
+            background: "rgba(255,255,255,0.5)",
+            border: "1px solid #c8d4c0",
+            borderRadius: "1.25rem",
+            padding: "1.75rem 1rem",
+            marginTop: "2rem",
+          }}
+        >
+          <CountdownUnit value={countdown.days} label="Days" />
+          <CountdownUnit value={countdown.hours} label="Hours" />
+          <CountdownUnit value={countdown.minutes} label="Minutes" />
+          <CountdownUnit value={countdown.seconds} label="Seconds" />
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ── VENUE, SCHEDULE & DRESS CODE ──────────────────────────────── */}
+      <section style={{ padding: "5rem 1.5rem", maxWidth: "52rem", margin: "0 auto" }}>
+        <SectionHeading>When &amp; Where</SectionHeading>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.25rem", marginBottom: "3.5rem" }}>
+          <VenueCard
+            title="Ceremony"
+            time="08:30 AM — 10:00 AM"
+            venue="St. Francis of Assisi Parish Church La Verna Hills"
+            address="San Marcelino St, La Verna Hills, Davao City, Davao del Sur"
+            googleMapUrl="https://maps.app.goo.gl/2ZiFLRbmafncRoD47"
+            appleMapUrl="https://maps.apple/r/66AVp2TNjRXVMg"
+          />
+          <VenueCard
+            title="Reception"
+            time="11:00 AM — 2:00 PM"
+            venue="Y&J Events & Catering"
+            address="Margarita St, Bajada, Davao City, Davao del Sur"
+            googleMapUrl="https://maps.app.goo.gl/gdaxcZrvYWckdBe59"
+            appleMapUrl="https://maps.apple/p/jFn.Hk~yVYD~fH"
+          />
+        </div>
+
+        {/* Dress Code */}
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.62rem", letterSpacing: "0.25em", color: "#9ea595", marginBottom: "1.5rem" }} className="uppercase">
+            Dress Code: Party Attire
+          </p>
+          <div style={{ display: "flex", justifyContent: "center", gap: "1.5rem", flexWrap: "wrap" }}>
+            {dressCodes.map((dc) => (
+              <div key={dc.name} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.65rem" }}>
+                <div
+                  style={{
+                    width: "3rem",
+                    height: "3rem",
+                    borderRadius: "50%",
+                    background: dc.hex,
+                    boxShadow: "0 2px 8px rgba(107,91,78,0.15)",
+                    border: "2px solid rgba(255,255,255,0.7)",
+                  }}
+                />
+                <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.65rem", color: "#a08c7e", textAlign: "center", lineHeight: 1.3 }}>
+                  {dc.name}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ── GUESTBOOK ─────────────────────────────────────────────────── */}
+      <section style={{ padding: "5rem 1.5rem", maxWidth: "44rem", margin: "0 auto" }}>
+        <SectionHeading>Guestbook</SectionHeading>
+        <Guestbook />
+      </section>
+
+      <Divider />
+
+      {/* ── FOOTER ────────────────────────────────────────────────────── */}
+      <footer style={{ padding: "3rem 1.5rem 2rem", textAlign: "center" }}>
+        <div style={{ margin: "0 auto 1.5rem", opacity: 0.3 }}>
+          <LeafSprig className="w-20 h-14 mx-auto" />
+        </div>
+        <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", color: "#6b5b4e", marginBottom: "0.5rem" }}>
+          Kim &amp; Rhiscel
+        </p>
+        <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.58rem", letterSpacing: "0.25em", color: "#9ea595" }} className="uppercase">
+          October 27, 2026 · Forever
+        </p>
+        <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.62rem", color: "#c4b5a8", marginTop: "2rem", letterSpacing: "0.08em" }}>
+          © 2026 · badweeds
+        </p>
+      </footer>
     </div>
   );
 }
