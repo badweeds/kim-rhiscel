@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Corinthia:wght@400;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500&display=swap');
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+@theme inline {
+  --font-serif: 'Lora', Georgia, serif;
+  --font-display: 'Corinthia', cursive;
+  --font-sans: 'Jost', system-ui, sans-serif;
+
+  --color-sage: #7a9e7e;
+  --color-sage-light: #a8c4a2;
+  --color-sage-dark: #4f7052;
+  --color-cream: #faf6f0;
+  --color-cream-dark: #f0e8da;
+  --color-blush: #e8b4b8;
+  --color-blush-light: #f5dde0;
+  --color-blush-dark: #c4818a;
+  --color-charcoal: #2c2c2c;
+  --color-warm-gray: #6b6b6b;
+}
+
+* {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-color: #faf6f0;
+  color: #2c2c2c;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+/* Embla carousel */
+.embla {
+  overflow: hidden;
+}
+
+.embla__container {
+  display: flex;
+}
+
+.embla__slide {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+
+/* Scrollbar hide */
+::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Bounce animation for scroll indicator */
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
