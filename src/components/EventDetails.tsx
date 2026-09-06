@@ -55,14 +55,14 @@ export default function EventDetails() {
         <div className="mt-12 flex flex-col gap-6">
           <EventCard
             type="Ceremony"
-            time="4:00 PM — 5:00 PM"
+            time="11:00 AM — 2:00 PM"
             venue="St Francis of Assisi Parish Church La Verna Hills"
-            address="14 Rosewood Lane, Charleston, SC 29401"
+            address="San Marcelino St, La Verna Hills, Davao City, Davao del Sur"
             mapUrl="https://maps.app.goo.gl/2ZiFLRbmafncRoD47"
           />
           <EventCard
             type="Reception"
-            time="6:30 PM — Midnight"
+            time="8:30 AM — 10:00 AM"
             venue="Y&J Events & Catering"
             address="Margarita St, Bajada, Davao City, Davao del Sur"
             mapUrl="https://maps.app.goo.gl/gdaxcZrvYWckdBe59"
