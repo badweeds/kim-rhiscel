@@ -673,7 +673,7 @@ export default function App() {
 
         <div style={{ width: "3rem", height: "1px", background: "#9ea595", opacity: 0.5, margin: "2.5rem auto 1.5rem" }} />
         <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", letterSpacing: "0.22em", color: "#a08c7e" }} className="uppercase">
-          October 27, 2026 · Davao City, Philippines
+          October 27, 2026
         </p>
       </section>
 
@@ -695,7 +695,7 @@ export default function App() {
               <span style={{ color: "#9ea595" }}>&amp;</span>{" "}
               <span style={{ color: "#6b5b4e" }}>Rosalina Rapliza</span>
             </p>
-            <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", color: "#b5a598", marginTop: "0.65rem", fontStyle: "italic" }}>Davao City, Philippines</p>
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", color: "#b5a598", marginTop: "0.65rem", fontStyle: "italic" }}> </p>
           </div>
 
           {/* Divider */}
@@ -716,7 +716,7 @@ export default function App() {
               <span style={{ color: "#9ea595" }}>&amp;</span>{" "}
               <span style={{ color: "#6b5b4e" }}>Jessica Cereligia</span>
             </p>
-            <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", color: "#b5a598", marginTop: "0.65rem", fontStyle: "italic" }}>Davao City, Philippines</p>
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", color: "#b5a598", marginTop: "0.65rem", fontStyle: "italic" }}> </p>
           </div>
         </div>
       </section>
