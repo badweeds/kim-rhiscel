@@ -17,7 +17,7 @@ export default function Footer() {
         <p className="mt-5 font-serif text-lg italic text-[#2c2c2c]">
           "We can't wait to celebrate with you!"
         </p>
-        <p className="mt-2 text-sm text-[#6b6b6b]">September 27, 2026 · Davao City, PH</p>
+        <p className="mt-2 text-sm text-[#6b6b6b]">October 27, 2026 · Davao City, PH</p>
 
         <a
           href="#"
