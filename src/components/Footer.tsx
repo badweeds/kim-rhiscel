@@ -11,7 +11,7 @@ export default function Footer() {
           className="font-display text-5xl text-[#4f7052]"
           style={{ fontFamily: 'Corinthia, cursive' }}
         >
-          Rhiscel  & Kim
+          Rhiscel   & Kim
         </p>
         <div className="mt-4 h-px w-16 bg-[#e8b4b8] mx-auto" />
         <p className="mt-5 font-serif text-lg italic text-[#2c2c2c]">
