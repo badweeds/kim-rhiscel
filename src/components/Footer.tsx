@@ -11,13 +11,13 @@ export default function Footer() {
           className="font-display text-5xl text-[#4f7052]"
           style={{ fontFamily: 'Corinthia, cursive' }}
         >
-          Eleanor & James
+          Rhiscel & Kim
         </p>
         <div className="mt-4 h-px w-16 bg-[#e8b4b8] mx-auto" />
         <p className="mt-5 font-serif text-lg italic text-[#2c2c2c]">
           "We can't wait to celebrate with you!"
         </p>
-        <p className="mt-2 text-sm text-[#6b6b6b]">December 31, 2026 · Charleston, SC</p>
+        <p className="mt-2 text-sm text-[#6b6b6b]">September 27, 2026 · Davao City, PH</p>
 
         <a
           href="#"
@@ -28,7 +28,7 @@ export default function Footer() {
         </a>
 
         <p className="mt-10 text-xs text-[#a0a0a0]">
-          Made with love · 2026
+          © 2026 · badweeds
         </p>
       </div>
     </footer>
