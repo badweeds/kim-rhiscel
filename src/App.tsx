@@ -329,11 +329,10 @@ function VenueCard({
 
 // ── Music Button ───────────────────────────────────────────────────────────
 
-function MusicButton() {
-  const [playing, setPlaying] = useState(false);
+function MusicButton({ playing, togglePlay }: { playing: boolean; togglePlay: () => void }) {
   return (
     <button
-      onClick={() => setPlaying((v) => !v)}
+      onClick={togglePlay}
       title={playing ? "Pause music" : "Play music"}
       style={{
         position: "fixed",
@@ -503,6 +502,46 @@ export default function App() {
   const weddingDate = new Date("2026-10-27T08:30:00+08:00");
   const countdown = useCountdown(weddingDate);
 
+  // Audio & Entry State
+  const [hasEntered, setHasEntered] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    // Initialize audio (pointing to your specific MP3 in the public folder)
+    audioRef.current = new Audio("/Can't%20Help%20Falling%20In%20Love%20(Instrumental)%20Wedding%20March.mp3");
+    audioRef.current.loop = true;
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleEnter = () => {
+    setHasEntered(true);
+    if (audioRef.current) {
+      audioRef.current.play().then(() => {
+        setPlaying(true);
+      }).catch(error => {
+        console.log("Audio play failed.", error);
+      });
+    }
+  };
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (playing) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setPlaying(!playing);
+    }
+  };
+
   const photos = [
     {
       url: "https://images.unsplash.com/photo-1759054710707-e1b297817ad9?w=600&h=800&fit=crop&auto=format",
@@ -532,7 +571,55 @@ export default function App() {
 
   return (
     <div style={{ background: "#fefcf8", minHeight: "100vh", overflowX: "hidden" }}>
-      <MusicButton />
+      
+      {/* ── ENTRY OVERLAY ── */}
+      {!hasEntered && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 9999,
+          background: "#fefcf8",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "opacity 1s ease-out",
+        }}>
+          <CornerLeaves position="tl" />
+          <CornerLeaves position="br" />
+          
+          <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", letterSpacing: "0.35em", color: "#9ea595", marginBottom: "1.5rem" }} className="uppercase">
+            You are invited
+          </p>
+          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.5rem, 8vw, 4rem)", color: "#6b5b4e", marginBottom: "2rem", textAlign: "center" }}>
+            Kim &amp; Rhiscel
+          </h1>
+          
+          <button 
+            onClick={handleEnter}
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: "0.8rem",
+              letterSpacing: "0.2em",
+              color: "#fefcf8",
+              background: "#9ea595",
+              border: "none",
+              borderRadius: "2rem",
+              padding: "1rem 2.5rem",
+              cursor: "pointer",
+              transition: "transform 0.3s, background 0.3s",
+              boxShadow: "0 4px 15px rgba(158, 165, 149, 0.4)"
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#7a8c72")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#9ea595")}
+          >
+            OPEN INVITATION
+          </button>
+        </div>
+      )}
+
+      {/* Music button is only mounted/shown once they enter */}
+      {hasEntered && <MusicButton playing={playing} togglePlay={togglePlay} />}
 
       {/* ── HERO ──────────────────────────────────────────────────────── */}
       <section style={{ position: "relative", minHeight: "100svh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "6rem 1.5rem 4rem", overflow: "hidden" }}>
