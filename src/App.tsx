@@ -531,53 +531,52 @@ export default function App() {
   const countdown = useCountdown(weddingDate);
 
   // Audio & Entry State
-  const [hasEntered, setHasEntered] = useState(false);
-  const [playing, setPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+const [hasEntered, setHasEntered] = useState(false);
+const [playing, setPlaying] = useState(false);
+const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Gallery Lightbox State
-  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+// Gallery Lightbox State
+const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
-  useEffect(() => {
+const handleEnter = () => {
   const audio = new Audio("/music.mp3");
   audio.loop = true;
-  audio.preload = "auto";
   audio.volume = 0.7;
   audioRef.current = audio;
 
-  return () => {
-    audio.pause();
-    audio.currentTime = 0;
-    audioRef.current = null;
-  };
-}, []);
-
-
-  const handleEnter = async () => {
-  try {
-    if (audioRef.current) {
-      await audioRef.current.play();
+  audio.play()
+    .then(() => {
       setPlaying(true);
-    }
-  } catch (error) {
-    console.error("Audio play failed:", error);
-  }
+    })
+    .catch((error) => {
+      console.error("MUSIC PLAY ERROR:", error);
+    });
 
   setHasEntered(true);
 };
 
-  const togglePlay = async () => {
-  if (!audioRef.current) return;
+const togglePlay = () => {
+  const audio = audioRef.current;
 
-  if (audioRef.current.paused) {
-    try {
-      await audioRef.current.play();
-      setPlaying(true);
-    } catch (error) {
-      console.error("Audio play failed:", error);
-    }
+  if (!audio) {
+    const newAudio = new Audio("/music.mp3");
+    newAudio.loop = true;
+    newAudio.volume = 0.7;
+    audioRef.current = newAudio;
+
+    newAudio.play()
+      .then(() => setPlaying(true))
+      .catch((error) => console.error("MUSIC PLAY ERROR:", error));
+
+    return;
+  }
+
+  if (audio.paused) {
+    audio.play()
+      .then(() => setPlaying(true))
+      .catch((error) => console.error("MUSIC PLAY ERROR:", error));
   } else {
-    audioRef.current.pause();
+    audio.pause();
     setPlaying(false);
   }
 };
