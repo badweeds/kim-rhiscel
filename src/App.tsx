@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { supabase } from "./lib/supabase";
 
 // ── Botanical SVG accents ──────────────────────────────────────────────────
 
@@ -399,95 +400,122 @@ function Divider() {
 function Guestbook() {
   const [name, setName] = useState("");
   const [wish, setWish] = useState("");
-  const [wishes, setWishes] = useState<{ name: string; wish: string }[]>([]);
+  const [wishes, setWishes] = useState<{ id: string; name: string; wish: string; created_at: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const submit = () => {
-    if (!name.trim() || !wish.trim()) return;
-    setWishes((prev) => [{ name: name.trim(), wish: wish.trim() }, ...prev]);
-    setName("");
-    setWish("");
+  useEffect(() => {
+    loadWishes();
+  }, []);
+
+  const loadWishes = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("guestbook")
+      .select("id, name, wish, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Failed to load wishes:", error);
+      setError("Unable to load wishes right now.");
+    } else {
+      setWishes(data || []);
+    }
+    setLoading(false);
+  };
+
+  const submit = async () => {
+    const cleanName = name.trim();
+    const cleanWish = wish.trim();
+
+    if (!cleanName || !cleanWish) {
+      setError("Please enter your name and wishes.");
+      return;
+    }
+
+    if (cleanName.length > 100) {
+      setError("Your name is too long.");
+      return;
+    }
+
+    if (cleanWish.length > 1000) {
+      setError("Your wishes are too long.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+
+    const { data, error } = await supabase
+      .from("guestbook")
+      .insert({ name: cleanName, wish: cleanWish })
+      .select("id, name, wish, created_at")
+      .single();
+
+    if (error) {
+      console.error("Failed to submit wish:", error);
+      setError("Something went wrong. Please try again.");
+    } else if (data) {
+      setWishes((prev) => [data, ...prev]);
+      setName("");
+      setWish("");
+    }
+
+    setSubmitting(false);
   };
 
   return (
-    <div
-      style={{
-        background: "rgba(255,255,255,0.55)",
-        border: "1px solid #c8d4c0",
-        borderRadius: "1.5rem",
-        boxShadow: "0 8px 32px rgba(107,91,78,0.08)",
-        padding: "2rem",
-        maxWidth: "36rem",
-        width: "100%",
-        margin: "0 auto",
-      }}
-    >
+    <div style={{ background: "rgba(255,255,255,0.55)", border: "1px solid #c8d4c0", borderRadius: "1.5rem", boxShadow: "0 8px 32px rgba(107,91,78,0.08)", padding: "2rem", maxWidth: "36rem", width: "100%", margin: "0 auto" }}>
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Enter your name"
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontSize: "0.875rem",
-          color: "#6b5b4e",
-          background: "rgba(254,252,248,0.8)",
-          border: "1px solid #c8d4c0",
-          borderRadius: "0.75rem",
-          padding: "0.75rem 1rem",
-          width: "100%",
-          outline: "none",
-          marginBottom: "0.85rem",
-        }}
+        maxLength={100}
+        style={{ fontFamily: "var(--font-sans)", fontSize: "0.875rem", color: "#6b5b4e", background: "rgba(254,252,248,0.8)", border: "1px solid #c8d4c0", borderRadius: "0.75rem", padding: "0.75rem 1rem", width: "100%", outline: "none", marginBottom: "0.85rem", boxSizing: "border-box" }}
       />
+
       <textarea
         value={wish}
         onChange={(e) => setWish(e.target.value)}
         placeholder="Enter your wishes*"
         rows={4}
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontSize: "0.875rem",
-          color: "#6b5b4e",
-          background: "rgba(254,252,248,0.8)",
-          border: "1px solid #c8d4c0",
-          borderRadius: "0.75rem",
-          padding: "0.75rem 1rem",
-          width: "100%",
-          outline: "none",
-          resize: "none",
-          marginBottom: "1rem",
-        }}
+        maxLength={1000}
+        style={{ fontFamily: "var(--font-sans)", fontSize: "0.875rem", color: "#6b5b4e", background: "rgba(254,252,248,0.8)", border: "1px solid #c8d4c0", borderRadius: "0.75rem", padding: "0.75rem 1rem", width: "100%", outline: "none", resize: "none", marginBottom: "1rem", boxSizing: "border-box" }}
       />
+
       <button
         onClick={submit}
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontSize: "0.7rem",
-          letterSpacing: "0.18em",
-          color: "#fefcf8",
-          background: "#9ea595",
-          border: "none",
-          borderRadius: "2rem",
-          padding: "0.75rem 2rem",
-          cursor: "pointer",
-          width: "100%",
-          transition: "background 0.2s",
-        }}
-        onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#7a8c72")}
-        onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#9ea595")}
+        disabled={submitting}
+        style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", letterSpacing: "0.18em", color: "#fefcf8", background: submitting ? "#b8beb0" : "#9ea595", border: "none", borderRadius: "2rem", padding: "0.75rem 2rem", cursor: submitting ? "not-allowed" : "pointer", width: "100%", transition: "background 0.2s" }}
       >
-        SEND WISHES
+        {submitting ? "SENDING..." : "SEND WISHES"}
       </button>
 
+      {error && (
+        <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.75rem", color: "#a06f65", textAlign: "center", marginTop: "1rem" }}>
+          {error}
+        </p>
+      )}
+
       <div className="mt-5">
-        {wishes.length === 0 ? (
+        {loading ? (
+          <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.78rem", color: "#a08c7e", textAlign: "center" }}>
+            Loading wishes...
+          </p>
+        ) : wishes.length === 0 ? (
           <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.78rem", color: "#a08c7e", textAlign: "center" }}>
             No wishes yet. Be the first!
           </p>
         ) : (
           wishes.map((w, i) => (
-            <div key={i} style={{ borderTop: i > 0 ? "1px solid #e8e0d8" : "none", paddingTop: i > 0 ? "0.85rem" : "0", marginTop: i > 0 ? "0.85rem" : "0" }}>
-              <p style={{ fontFamily: "var(--font-serif)", fontSize: "0.85rem", color: "#6b5b4e", fontStyle: "italic" }}>&ldquo;{w.wish}&rdquo;</p>
-              <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", color: "#9ea595", marginTop: "0.3rem" }}>— {w.name}</p>
+            <div key={w.id} style={{ borderTop: i > 0 ? "1px solid #e8e0d8" : "none", paddingTop: i > 0 ? "0.85rem" : "0", marginTop: i > 0 ? "0.85rem" : "0" }}>
+              <p style={{ fontFamily: "var(--font-serif)", fontSize: "0.85rem", color: "#6b5b4e", fontStyle: "italic" }}>
+                &ldquo;{w.wish}&rdquo;
+              </p>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", color: "#9ea595", marginTop: "0.3rem" }}>
+                — {w.name}
+              </p>
             </div>
           ))
         )}
@@ -495,6 +523,7 @@ function Guestbook() {
     </div>
   );
 }
+
 
 // ── Main App ───────────────────────────────────────────────────────────────
 
