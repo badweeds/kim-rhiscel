@@ -524,7 +524,6 @@ function Guestbook() {
   );
 }
 
-
 // ── Main App ───────────────────────────────────────────────────────────────
 
 export default function App() {
