@@ -511,7 +511,7 @@ export default function App() {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    audioRef.current = new Audio("public/music.mp3");
+    audioRef.current = new Audio("/music.mp3");
     audioRef.current.loop = true;
 
     return () => {
