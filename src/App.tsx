@@ -150,7 +150,7 @@ function AddToCalendar() {
   const googleUrl =
     "https://www.google.com/calendar/render?action=TEMPLATE&text=Kim+%26+Rhiscel+Wedding&dates=20261027T003000Z/20261027T060000Z&details=Wedding+Ceremony+%26+Reception&location=St.+Francis+of+Assisi+Parish+Church,+La+Verna+Hills,+Davao+City";
 
-  const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:20261027T003000Z\nDTEND:20261027T060000Z\nSUMMARY:Kim & Rhiscel Wedding\nDESCRIPTION:Wedding Ceremony & Reception\nLOCATION:St. Francis of Assisi Parish Church, La Verna Hills, Davao City\nEND:VEVENT\nEND:VCALENDAR`;
+  const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:20261027T003000Z\nDTEND:20261027T060000Z\nSUMMARY:Kim & Rhiscel Wedding\nDESCRIPTION:Wedding Ceremony & Reception\nLOCATION:St. Francis of Assisi Parish Church, La Verna Hills\nEND:VEVENT\nEND:VCALENDAR`;
 
   const downloadIcs = () => {
     const blob = new Blob([icsContent], { type: "text/calendar" });
@@ -507,9 +507,12 @@ export default function App() {
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Gallery Lightbox State
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+
   useEffect(() => {
-    // Initialize audio (pointing to your specific MP3 in the public folder)
-    audioRef.current = new Audio("/Can't%20Help%20Falling%20In%20Love%20(Instrumental)%20Wedding%20March.mp3");
+    // Make sure the audio file exists at /music.mp3 in your public folder!
+    audioRef.current = new Audio("/music.mp3");
     audioRef.current.loop = true;
 
     return () => {
@@ -521,14 +524,12 @@ export default function App() {
   }, []);
 
   const handleEnter = () => {
-    setHasEntered(true);
     if (audioRef.current) {
-      audioRef.current.play().then(() => {
-        setPlaying(true);
-      }).catch(error => {
-        console.log("Audio play failed.", error);
-      });
+      audioRef.current.play()
+        .then(() => setPlaying(true))
+        .catch(error => console.log("Audio play failed.", error));
     }
+    setHasEntered(true);
   };
 
   const togglePlay = () => {
@@ -536,7 +537,7 @@ export default function App() {
       if (playing) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play();
+        audioRef.current.play().catch(e => console.log(e));
       }
       setPlaying(!playing);
     }
@@ -561,6 +562,27 @@ export default function App() {
     },
   ];
 
+  const nextPhoto = () => {
+    if (selectedPhotoIndex !== null) {
+      setSelectedPhotoIndex((selectedPhotoIndex + 1) % photos.length);
+    }
+  };
+
+  const prevPhoto = () => {
+    if (selectedPhotoIndex !== null) {
+      setSelectedPhotoIndex((selectedPhotoIndex - 1 + photos.length) % photos.length);
+    }
+  };
+
+  // Basic touch swipe logic for Lightbox
+  let touchStartX = 0;
+  const onTouchStart = (e: React.TouchEvent) => { touchStartX = e.changedTouches[0].screenX; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const touchEndX = e.changedTouches[0].screenX;
+    if (touchEndX < touchStartX - 50) nextPhoto();
+    if (touchEndX > touchStartX + 50) prevPhoto();
+  };
+
   const dressCodes = [
     { name: "Sage Green", hex: "#9ea595" },
     { name: "Dusty Blue", hex: "#b0c1c8" },
@@ -570,51 +592,82 @@ export default function App() {
   ];
 
   return (
-    <div style={{ background: "#fefcf8", minHeight: "100vh", overflowX: "hidden" }}>
+    <div style={{ background: "#fefcf8", minHeight: "100vh", overflowX: "hidden", position: "relative" }}>
       
-      {/* ── ENTRY OVERLAY ── */}
-      {!hasEntered && (
-        <div style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 9999,
-          background: "#fefcf8",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          transition: "opacity 1s ease-out",
-        }}>
-          <CornerLeaves position="tl" />
-          <CornerLeaves position="br" />
-          
-          <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", letterSpacing: "0.35em", color: "#9ea595", marginBottom: "1.5rem" }} className="uppercase">
-            You are invited
-          </p>
-          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.5rem, 8vw, 4rem)", color: "#6b5b4e", marginBottom: "2rem", textAlign: "center" }}>
-            Kim &amp; Rhiscel
-          </h1>
-          
+      {/* ── ENTRY OVERLAY WITH 3D TRANSITION ── */}
+      <div style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background: "#fefcf8",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "transform 1.2s cubic-bezier(0.77, 0, 0.175, 1), opacity 1.2s ease-in-out",
+        transform: hasEntered ? "perspective(1000px) translateZ(-200px) rotateX(45deg)" : "perspective(1000px) translateZ(0) rotateX(0deg)",
+        opacity: hasEntered ? 0 : 1,
+        pointerEvents: hasEntered ? "none" : "auto",
+        transformOrigin: "center center",
+      }}>
+        <CornerLeaves position="tl" />
+        <CornerLeaves position="br" />
+        
+        <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", letterSpacing: "0.35em", color: "#9ea595", marginBottom: "1.5rem" }} className="uppercase">
+          You are invited
+        </p>
+        <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.5rem, 8vw, 4rem)", color: "#6b5b4e", marginBottom: "2rem", textAlign: "center" }}>
+          Kim &amp; Rhiscel
+        </h1>
+        
+        <button 
+          onClick={handleEnter}
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: "0.8rem",
+            letterSpacing: "0.2em",
+            color: "#fefcf8",
+            background: "#9ea595",
+            border: "none",
+            borderRadius: "2rem",
+            padding: "1rem 2.5rem",
+            cursor: "pointer",
+            transition: "transform 0.3s, background 0.3s",
+            boxShadow: "0 4px 15px rgba(158, 165, 149, 0.4)"
+          }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#7a8c72")}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#9ea595")}
+        >
+          OPEN INVITATION
+        </button>
+      </div>
+
+      {/* ── PHOTO LIGHTBOX OVERLAY ── */}
+      {selectedPhotoIndex !== null && (
+        <div 
+          style={{
+            position: "fixed", inset: 0, zIndex: 10000, background: "rgba(0,0,0,0.9)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
           <button 
-            onClick={handleEnter}
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontSize: "0.8rem",
-              letterSpacing: "0.2em",
-              color: "#fefcf8",
-              background: "#9ea595",
-              border: "none",
-              borderRadius: "2rem",
-              padding: "1rem 2.5rem",
-              cursor: "pointer",
-              transition: "transform 0.3s, background 0.3s",
-              boxShadow: "0 4px 15px rgba(158, 165, 149, 0.4)"
-            }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#7a8c72")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#9ea595")}
+            onClick={() => setSelectedPhotoIndex(null)}
+            style={{ position: "absolute", top: "1.5rem", right: "1.5rem", background: "transparent", border: "none", color: "white", fontSize: "2rem", cursor: "pointer", zIndex: 10001 }}
           >
-            OPEN INVITATION
+            &times;
           </button>
+          
+          <button onClick={prevPhoto} style={{ position: "absolute", left: "1rem", background: "transparent", border: "none", color: "white", fontSize: "3rem", cursor: "pointer", padding: "1rem" }}>&#8249;</button>
+          
+          <img 
+            src={photos[selectedPhotoIndex].url} 
+            alt={photos[selectedPhotoIndex].alt} 
+            style={{ maxHeight: "85vh", maxWidth: "90vw", objectFit: "contain", borderRadius: "0.5rem", userSelect: "none" }} 
+          />
+          
+          <button onClick={nextPhoto} style={{ position: "absolute", right: "1rem", background: "transparent", border: "none", color: "white", fontSize: "3rem", cursor: "pointer", padding: "1rem" }}>&#8250;</button>
         </div>
       )}
 
@@ -633,40 +686,13 @@ export default function App() {
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.25rem", textAlign: "center" }}>
-          <h1
-            style={{
-              fontFamily: "var(--font-serif)",
-              fontSize: "clamp(3rem, 12vw, 7rem)",
-              fontWeight: 400,
-              color: "#6b5b4e",
-              lineHeight: 1.05,
-              margin: 0,
-            }}
-          >
+          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(3rem, 12vw, 7rem)", fontWeight: 400, color: "#6b5b4e", lineHeight: 1.05, margin: 0 }}>
             Kim Rapliza
           </h1>
-          <span
-            style={{
-              fontFamily: "var(--font-serif)",
-              fontSize: "clamp(2.5rem, 10vw, 5.5rem)",
-              fontWeight: 400,
-              color: "#9ea595",
-              fontStyle: "italic",
-              lineHeight: 1,
-            }}
-          >
+          <span style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.5rem, 10vw, 5.5rem)", fontWeight: 400, color: "#9ea595", fontStyle: "italic", lineHeight: 1 }}>
             &amp;
           </span>
-          <h1
-            style={{
-              fontFamily: "var(--font-serif)",
-              fontSize: "clamp(3rem, 12vw, 7rem)",
-              fontWeight: 400,
-              color: "#6b5b4e",
-              lineHeight: 1.05,
-              margin: 0,
-            }}
-          >
+          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(3rem, 12vw, 7rem)", fontWeight: 400, color: "#6b5b4e", lineHeight: 1.05, margin: 0 }}>
             Rhiscel Cereligia
           </h1>
         </div>
@@ -695,7 +721,6 @@ export default function App() {
               <span style={{ color: "#9ea595" }}>&amp;</span>{" "}
               <span style={{ color: "#6b5b4e" }}>Rosalina Rapliza</span>
             </p>
-            <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", color: "#b5a598", marginTop: "0.65rem", fontStyle: "italic" }}> </p>
           </div>
 
           {/* Divider */}
@@ -716,41 +741,34 @@ export default function App() {
               <span style={{ color: "#9ea595" }}>&amp;</span>{" "}
               <span style={{ color: "#6b5b4e" }}>Jessica Cereligia</span>
             </p>
-            <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", color: "#b5a598", marginTop: "0.65rem", fontStyle: "italic" }}> </p>
           </div>
         </div>
       </section>
 
       <Divider />
 
-      {/* ── PHOTO GALLERY ─────────────────────────────────────────────── */}
+      {/* ── PHOTO GALLERY (CLICKABLE) ─────────────────────────────────── */}
       <section style={{ padding: "5rem 1.5rem", maxWidth: "60rem", margin: "0 auto" }}>
         <SectionHeading>Photo Gallery</SectionHeading>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gridTemplateRows: "auto auto",
-            gap: "1rem",
-          }}
-        >
-          {/* Large left */}
-          <div style={{ gridRow: "1 / 3", borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "3/4" }}>
-            <img src={photos[0].url} alt={photos[0].alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gridTemplateRows: "auto auto", gap: "1rem" }}>
+          
+          <div onClick={() => setSelectedPhotoIndex(0)} style={{ cursor: "pointer", gridRow: "1 / 3", borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "3/4" }}>
+            <img src={photos[0].url} alt={photos[0].alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.3s" }} onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")} onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")} />
           </div>
-          {/* Top right */}
-          <div style={{ borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "4/3" }}>
-            <img src={photos[1].url} alt={photos[1].alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" />
+          
+          <div onClick={() => setSelectedPhotoIndex(1)} style={{ cursor: "pointer", borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "4/3" }}>
+            <img src={photos[1].url} alt={photos[1].alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.3s" }} onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")} onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")} />
           </div>
-          {/* Bottom right — two columns split */}
+          
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <div style={{ borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "1" }}>
-              <img src={photos[2].url} alt={photos[2].alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" />
+            <div onClick={() => setSelectedPhotoIndex(2)} style={{ cursor: "pointer", borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "1" }}>
+              <img src={photos[2].url} alt={photos[2].alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.3s" }} onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")} onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")} />
             </div>
-            <div style={{ borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "1" }}>
-              <img src={photos[3].url} alt={photos[3].alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" />
+            <div onClick={() => setSelectedPhotoIndex(3)} style={{ cursor: "pointer", borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "1" }}>
+              <img src={photos[3].url} alt={photos[3].alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.3s" }} onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")} onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")} />
             </div>
           </div>
+
         </div>
       </section>
 
@@ -759,32 +777,16 @@ export default function App() {
       {/* ── DATE, COUNTDOWN & CALENDAR ────────────────────────────────── */}
       <section style={{ padding: "5rem 1.5rem", maxWidth: "42rem", margin: "0 auto", textAlign: "center" }}>
         <SectionHeading>Event Info</SectionHeading>
-
         <div style={{ marginBottom: "2.5rem" }}>
           <p style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(1.75rem, 6vw, 3rem)", fontWeight: 400, color: "#6b5b4e", letterSpacing: "0.05em" }}>
             Tuesday · 27 · October 2026
           </p>
         </div>
-
         <MiniCalendar />
-
         <div style={{ margin: "2rem auto" }}>
           <AddToCalendar />
         </div>
-
-        {/* Countdown */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: "0",
-            background: "rgba(255,255,255,0.5)",
-            border: "1px solid #c8d4c0",
-            borderRadius: "1.25rem",
-            padding: "1.75rem 1rem",
-            marginTop: "2rem",
-          }}
-        >
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0", background: "rgba(255,255,255,0.5)", border: "1px solid #c8d4c0", borderRadius: "1.25rem", padding: "1.75rem 1rem", marginTop: "2rem" }}>
           <CountdownUnit value={countdown.days} label="Days" />
           <CountdownUnit value={countdown.hours} label="Hours" />
           <CountdownUnit value={countdown.minutes} label="Minutes" />
@@ -797,27 +799,10 @@ export default function App() {
       {/* ── VENUE, SCHEDULE & DRESS CODE ──────────────────────────────── */}
       <section style={{ padding: "5rem 1.5rem", maxWidth: "52rem", margin: "0 auto" }}>
         <SectionHeading>When &amp; Where</SectionHeading>
-
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.25rem", marginBottom: "3.5rem" }}>
-          <VenueCard
-            title="Ceremony"
-            time="08:30 AM — 10:00 AM"
-            venue="St. Francis of Assisi Parish Church La Verna Hills"
-            address="San Marcelino St, La Verna Hills, Davao City, Davao del Sur"
-            googleMapUrl="https://maps.app.goo.gl/2ZiFLRbmafncRoD47"
-            appleMapUrl="https://maps.apple/r/66AVp2TNjRXVMg"
-          />
-          <VenueCard
-            title="Reception"
-            time="11:00 AM — 2:00 PM"
-            venue="Y&J Events & Catering"
-            address="Margarita St, Bajada, Davao City, Davao del Sur"
-            googleMapUrl="https://maps.app.goo.gl/gdaxcZrvYWckdBe59"
-            appleMapUrl="https://maps.apple/p/jFn.Hk~yVYD~fH"
-          />
+          <VenueCard title="Ceremony" time="08:30 AM — 10:00 AM" venue="St. Francis of Assisi Parish Church La Verna Hills" address="San Marcelino St, La Verna Hills, Davao City, Davao del Sur" googleMapUrl="https://maps.app.goo.gl/2ZiFLRbmafncRoD47" appleMapUrl="https://maps.apple/r/66AVp2TNjRXVMg" />
+          <VenueCard title="Reception" time="11:00 AM — 2:00 PM" venue="Y&J Events & Catering" address="Margarita St, Bajada, Davao City, Davao del Sur" googleMapUrl="https://maps.app.goo.gl/gdaxcZrvYWckdBe59" appleMapUrl="https://maps.apple/p/jFn.Hk~yVYD~fH" />
         </div>
-
-        {/* Dress Code */}
         <div style={{ textAlign: "center" }}>
           <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.62rem", letterSpacing: "0.25em", color: "#9ea595", marginBottom: "1.5rem" }} className="uppercase">
             Dress Code: Party Attire
@@ -825,19 +810,8 @@ export default function App() {
           <div style={{ display: "flex", justifyContent: "center", gap: "1.5rem", flexWrap: "wrap" }}>
             {dressCodes.map((dc) => (
               <div key={dc.name} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.65rem" }}>
-                <div
-                  style={{
-                    width: "3rem",
-                    height: "3rem",
-                    borderRadius: "50%",
-                    background: dc.hex,
-                    boxShadow: "0 2px 8px rgba(107,91,78,0.15)",
-                    border: "2px solid rgba(255,255,255,0.7)",
-                  }}
-                />
-                <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.65rem", color: "#a08c7e", textAlign: "center", lineHeight: 1.3 }}>
-                  {dc.name}
-                </p>
+                <div style={{ width: "3rem", height: "3rem", borderRadius: "50%", background: dc.hex, boxShadow: "0 2px 8px rgba(107,91,78,0.15)", border: "2px solid rgba(255,255,255,0.7)" }} />
+                <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.65rem", color: "#a08c7e", textAlign: "center", lineHeight: 1.3 }}>{dc.name}</p>
               </div>
             ))}
           </div>
