@@ -530,56 +530,71 @@ export default function App() {
   const weddingDate = new Date("2026-10-27T08:30:00+08:00");
   const countdown = useCountdown(weddingDate);
 
-  // Audio & Entry State
-const [hasEntered, setHasEntered] = useState(false);
-const [playing, setPlaying] = useState(false);
-const audioRef = useRef<HTMLAudioElement | null>(null);
+    // Audio & Entry State
+  const [hasEntered, setHasEntered] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-// Gallery Lightbox State
-const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+  // Gallery Lightbox State
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
-const handleEnter = () => {
-  const audio = new Audio("/music.mp3");
-  audio.loop = true;
-  audio.volume = 0.7;
-  audioRef.current = audio;
+  useEffect(() => {
+    const audio = new Audio();
+    audio.src = "/music.mp3";
+    audio.loop = true;
+    audio.preload = "auto";
+    audio.volume = 0.7;
 
-  audio.play()
-    .then(() => {
-      setPlaying(true);
-    })
-    .catch((error) => {
-      console.error("MUSIC PLAY ERROR:", error);
+    audio.addEventListener("canplaythrough", () => {
+      console.log("MUSIC READY");
     });
 
-  setHasEntered(true);
-};
+    audio.addEventListener("error", (e) => {
+      console.error("MUSIC LOAD ERROR:", e);
+      console.error("Audio error:", audio.error);
+    });
 
-const togglePlay = () => {
-  const audio = audioRef.current;
+    audioRef.current = audio;
 
-  if (!audio) {
-    const newAudio = new Audio("/music.mp3");
-    newAudio.loop = true;
-    newAudio.volume = 0.7;
-    audioRef.current = newAudio;
+    return () => {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+      audioRef.current = null;
+    };
+  }, []);
 
-    newAudio.play()
-      .then(() => setPlaying(true))
-      .catch((error) => console.error("MUSIC PLAY ERROR:", error));
+  const handleEnter = async () => {
+    setHasEntered(true);
 
-    return;
-  }
+    const audio = audioRef.current;
+    if (!audio) return;
 
-  if (audio.paused) {
-    audio.play()
-      .then(() => setPlaying(true))
-      .catch((error) => console.error("MUSIC PLAY ERROR:", error));
-  } else {
-    audio.pause();
-    setPlaying(false);
-  }
-};
+    try {
+      await audio.play();
+      setPlaying(true);
+      console.log("MUSIC PLAYING");
+    } catch (error) {
+      console.error("MUSIC PLAY ERROR:", error);
+    }
+  };
+
+  const togglePlay = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (audio.paused) {
+      try {
+        await audio.play();
+        setPlaying(true);
+      } catch (error) {
+        console.error("MUSIC PLAY ERROR:", error);
+      }
+    } else {
+      audio.pause();
+      setPlaying(false);
+    }
+  };
 
   const photos = [
     {
