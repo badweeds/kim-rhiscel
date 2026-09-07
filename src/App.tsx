@@ -511,8 +511,7 @@ export default function App() {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    // Make sure the audio file exists at /music.mp3 in your public folder!
-    audioRef.current = new Audio("/music.mp3");
+    audioRef.current = new Audio("public/music.mp3");
     audioRef.current.loop = true;
 
     return () => {
