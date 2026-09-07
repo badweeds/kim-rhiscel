@@ -539,36 +539,48 @@ export default function App() {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    audioRef.current = new Audio("/music.mp3");
-    audioRef.current.loop = true;
+  const audio = new Audio("/music.mp3");
+  audio.loop = true;
+  audio.preload = "auto";
+  audio.volume = 0.7;
+  audioRef.current = audio;
 
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
-  const handleEnter = () => {
-    if (audioRef.current) {
-      audioRef.current.play()
-        .then(() => setPlaying(true))
-        .catch(error => console.log("Audio play failed.", error));
-    }
-    setHasEntered(true);
+  return () => {
+    audio.pause();
+    audio.currentTime = 0;
+    audioRef.current = null;
   };
+}, []);
 
-  const togglePlay = () => {
+
+  const handleEnter = async () => {
+  try {
     if (audioRef.current) {
-      if (playing) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play().catch(e => console.log(e));
-      }
-      setPlaying(!playing);
+      await audioRef.current.play();
+      setPlaying(true);
     }
-  };
+  } catch (error) {
+    console.error("Audio play failed:", error);
+  }
+
+  setHasEntered(true);
+};
+
+  const togglePlay = async () => {
+  if (!audioRef.current) return;
+
+  if (audioRef.current.paused) {
+    try {
+      await audioRef.current.play();
+      setPlaying(true);
+    } catch (error) {
+      console.error("Audio play failed:", error);
+    }
+  } else {
+    audioRef.current.pause();
+    setPlaying(false);
+  }
+};
 
   const photos = [
     {
