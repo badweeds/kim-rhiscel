@@ -817,7 +817,7 @@ export default function App() {
       width: "100%", 
       height: "100%", 
       objectFit: "cover", 
-      objectPosition: "top", // <-- THIS IS THE MAGIC FIX
+      objectPosition: "50% 20%", // <-- THIS IS THE MAGIC FIX
       display: "block", 
       transition: "transform 0.3s" 
     }} 
