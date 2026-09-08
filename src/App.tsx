@@ -810,8 +810,21 @@ export default function App() {
           </div>
           
           <div onClick={() => setSelectedPhotoIndex(1)} style={{ cursor: "pointer", borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "4/3" }}>
-            <img src={photos[1].url} alt={photos[1].alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.3s" }} onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")} onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")} />
-          </div>
+  <img 
+    src={photos[1].url} 
+    alt={photos[1].alt} 
+    style={{ 
+      width: "100%", 
+      height: "100%", 
+      objectFit: "cover", 
+      objectPosition: "top", // <-- THIS IS THE MAGIC FIX
+      display: "block", 
+      transition: "transform 0.3s" 
+    }} 
+    onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")} 
+    onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")} 
+  />
+</div>
           
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             <div onClick={() => setSelectedPhotoIndex(2)} style={{ cursor: "pointer", borderRadius: "1.25rem", overflow: "hidden", background: "#e8ddd5", aspectRatio: "1" }}>
