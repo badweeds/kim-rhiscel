@@ -538,42 +538,15 @@ export default function App() {
   // Gallery Lightbox State
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    const audio = new Audio();
-    audio.src = "/music.mp3";
-    audio.loop = true;
-    audio.preload = "auto";
-    audio.volume = 0.7;
-
-    audio.addEventListener("canplaythrough", () => {
-      console.log("MUSIC READY");
-    });
-
-    audio.addEventListener("error", (e) => {
-      console.error("MUSIC LOAD ERROR:", e);
-      console.error("Audio error:", audio.error);
-    });
-
-    audioRef.current = audio;
-
-    return () => {
-      audio.pause();
-      audio.removeAttribute("src");
-      audio.load();
-      audioRef.current = null;
-    };
-  }, []);
-
   const handleEnter = async () => {
     setHasEntered(true);
-
     const audio = audioRef.current;
     if (!audio) return;
 
     try {
+      audio.volume = 0.7;
       await audio.play();
       setPlaying(true);
-      console.log("MUSIC PLAYING");
     } catch (error) {
       console.error("MUSIC PLAY ERROR:", error);
     }
