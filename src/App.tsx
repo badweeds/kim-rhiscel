@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./lib/supabase";
+import photo1 from "./photo/1.jpg";
+import photo2 from "./photo/2.jpg";
+import photo3 from "./photo/3.jpg";
+import photo4 from "./photo/4.jpg";
 
 // ── Botanical SVG accents ──────────────────────────────────────────────────
 
@@ -571,19 +575,19 @@ export default function App() {
 
   const photos = [
     {
-      url: "/photo/1.jpg",
+      url: photo1,
       alt: "Bride and groom embracing in doorway",
     },
     {
-      url: "/photo/2.jpg",
+      url: photo2,
       alt: "Couple embracing under chandelier in garden",
     },
     {
-      url: "/photo/3.jpg",
+      url: photo3,
       alt: "Couple embracing romantically outdoors",
     },
     {
-      url: "/photo/4.jpg",
+      url: photo4,
       alt: "Couple in formal attire holding hands outdoors",
     },
   ];
