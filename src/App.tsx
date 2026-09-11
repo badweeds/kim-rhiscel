@@ -571,19 +571,19 @@ export default function App() {
 
   const photos = [
     {
-      url: "https://media.discordapp.net/attachments/1279434781192622112/1546882091134746704/4.jpg?ex=6aa165b6&is=6aa01436&hm=ba4c76874d40e9f75ba8734515735092757d5eb14ca9c2079e4e7949d1e0a1b1&=&format=webp&width=825&height=1024",
+      url: "/photo/1.jpg",
       alt: "Bride and groom embracing in doorway",
     },
     {
-      url: "https://media.discordapp.net/attachments/1279434781192622112/1546882092141518950/6.jpg?ex=6aa165b6&is=6aa01436&hm=83839747b0bad3c458cfcb7ece59e4ba55ce3731184bc8fc98ee31d8173b1082&=&format=webp&width=673&height=1024",
+      url: "/photo/2.jpg",
       alt: "Couple embracing under chandelier in garden",
     },
     {
-      url: "https://media.discordapp.net/attachments/1279434781192622112/1546882093043163206/487551610_3950929981822702_3430219844061485952_n.jpg?ex=6aa165b6&is=6aa01436&hm=45a05ba85a191977fe61780eaaa6c9c4e14211654e20513b3889f19c9cc2e852&=&format=webp&width=682&height=1024",
+      url: "/photo/3.jpg",
       alt: "Couple embracing romantically outdoors",
     },
     {
-      url: "https://media.discordapp.net/attachments/1279434781192622112/1546882093445812244/487824467_3950929901822710_836277732939037520_n.jpg?ex=6aa165b6&is=6aa01436&hm=86c8a397972c546b393303e674506b69edbbd412e7e4c793fccf5af87e6d2aad&=&format=webp&width=682&height=1024",
+      url: "/photo/4.jpg",
       alt: "Couple in formal attire holding hands outdoors",
     },
   ];
