@@ -625,7 +625,19 @@ export default function App() {
     <div style={{ background: "#fefcf8", minHeight: "100vh", overflowX: "hidden", position: "relative" }}>
       
       {/* ── BULLETPROOF DOM AUDIO ELEMENT ── */}
-      <audio ref={audioRef} src="/wedding-music.mp3" loop preload="auto" />
+      <audio
+  ref={audioRef}
+  src="/bg-music.mp3"
+  loop
+  preload="auto"
+  onError={(e) => {
+    console.error("AUDIO LOAD ERROR:", e.currentTarget.error);
+  }}
+  onCanPlay={() => {
+    console.log("AUDIO READY");
+  }}
+/>
+
 
       {/* ── ENTRY OVERLAY WITH 3D TRANSITION ── */}
       <div style={{
