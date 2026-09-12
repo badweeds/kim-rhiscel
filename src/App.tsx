@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./lib/supabase";
-import photo1 from "./photo/1.jpg";
-import photo2 from "./photo/2.jpg";
-import photo3 from "./photo/3.jpg";
-import photo4 from "./photo/4.jpg";
+import photo1 from "./images/1.jpg";
+import photo2 from "./images/2.jpg";
+import photo3 from "./images/3.jpg";
+import photo4 from "./images/4.jpg";
 
 // ── Botanical SVG accents ──────────────────────────────────────────────────
 
@@ -624,6 +624,9 @@ export default function App() {
   return (
     <div style={{ background: "#fefcf8", minHeight: "100vh", overflowX: "hidden", position: "relative" }}>
       
+      {/* ── BULLETPROOF DOM AUDIO ELEMENT ── */}
+      <audio ref={audioRef} src="/bg-music.mp3" loop preload="auto" />
+
       {/* ── ENTRY OVERLAY WITH 3D TRANSITION ── */}
       <div style={{
         position: "fixed",
