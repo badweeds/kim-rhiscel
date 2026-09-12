@@ -1,11 +1,15 @@
 {
   "headers": [
     {
-      "source": "/music.mp3",
+      "source": "/bg-music.mp3",
       "headers": [
         {
           "key": "Content-Type",
           "value": "audio/mpeg"
+        },
+        {
+          "key": "Accept-Ranges",
+          "value": "bytes"
         }
       ]
     }
