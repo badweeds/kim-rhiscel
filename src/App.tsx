@@ -630,14 +630,15 @@ export default function App() {
   src="/bg-music.mp3"
   loop
   preload="auto"
+  controls
+  onLoadedData={() => console.log("🎵 AUDIO LOADED")}
+  onCanPlay={() => console.log("🎵 AUDIO CAN PLAY")}
+  onPlay={() => console.log("🎵 AUDIO PLAYING")}
+  onPause={() => console.log("🎵 AUDIO PAUSED")}
   onError={(e) => {
-    console.error("AUDIO LOAD ERROR:", e.currentTarget.error);
-  }}
-  onCanPlay={() => {
-    console.log("AUDIO READY");
+    console.error("❌ AUDIO ERROR:", e.currentTarget.error);
   }}
 />
-
 
       {/* ── ENTRY OVERLAY WITH 3D TRANSITION ── */}
       <div style={{
