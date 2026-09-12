@@ -630,7 +630,6 @@ export default function App() {
   src="/bg-music.mp3"
   loop
   preload="auto"
-  controls
   onLoadedData={() => console.log("🎵 AUDIO LOADED")}
   onCanPlay={() => console.log("🎵 AUDIO CAN PLAY")}
   onPlay={() => console.log("🎵 AUDIO PLAYING")}
